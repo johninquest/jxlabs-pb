@@ -1,91 +1,31 @@
-version: "3.11"
-
 services:
-  traefik:
-    image: traefik:v2.10
-    container_name: traefik
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--api.insecure=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=hello@johnapps.de"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    networks:
+      - web1
+    restart: unless-stopped
+    depends_on:
+      - pb_backend
+
+  pb_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+      args:
+        - PB_VERSION=0.28.2
+    container_name: pb_backend
     ports:
-      - "80:80"
-      - "443:443"
       - "8080:8080"
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
+      - ./pb_data:/pb/pb_data
     networks:
-      - web0
-    restart: unless-stopped
-
-  pb_popati:
-    build:
-      context: .
-      dockerfile: Dockerfile.base
-      args:
-        - PB_VERSION=0.27.2
-    container_name: pb_popati
-    volumes:
-      - ./pb_data_popati:/pb/pb_data
-    environment:
-      - SMTP_SERVER=smtp.ionos.de
-      - SMTP_PORT=587
-    networks:
-      - web0
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.popati-http.rule=Host(`api.johnapps.de`) && PathPrefix(`/popati/v1`)"
-      - "traefik.http.routers.popati-http.entrypoints=web"
-      - "traefik.http.routers.popati.rule=Host(`api.johnapps.de`) && PathPrefix(`/popati/v1`)"
-      - "traefik.http.routers.popati.entrypoints=websecure"
-      - "traefik.http.routers.popati.tls=true"
-      - "traefik.http.routers.popati.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.strip-prefix-popati.stripprefix.prefixes=/popati/v1"
-      - "traefik.http.middlewares.redirect-to-https-popati.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.cors-popati.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
-      - "traefik.http.middlewares.cors-popati.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.cors-popati.headers.accesscontrolallowheaders=*"
-      - "traefik.http.routers.popati-http.middlewares=redirect-to-https-popati"
-      - "traefik.http.routers.popati.middlewares=strip-prefix-popati,cors-popati"
-      - "traefik.http.services.popati.loadbalancer.server.port=8080"
-    restart: unless-stopped
-
-  pb_polisync:
-    build:
-      context: .
-      dockerfile: Dockerfile.base
-      args:
-        - PB_VERSION=0.27.2
-    container_name: pb_polisync
-    volumes:
-      - ./pb_data_polisync:/pb/pb_data
-    networks:
-      - web0
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.polisync-http.rule=Host(`api.johnapps.de`) && PathPrefix(`/polisync/v1`)"
-      - "traefik.http.routers.polisync-http.entrypoints=web"
-      - "traefik.http.routers.polisync.rule=Host(`api.johnapps.de`) && PathPrefix(`/polisync/v1`)"
-      - "traefik.http.routers.polisync.entrypoints=websecure"
-      - "traefik.http.routers.polisync.tls=true"
-      - "traefik.http.routers.polisync.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.strip-prefix-polisync.stripprefix.prefixes=/polisync/v1"
-      - "traefik.http.middlewares.redirect-to-https-polisync.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.cors-polisync.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
-      - "traefik.http.middlewares.cors-polisync.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.cors-polisync.headers.accesscontrolallowheaders=*"
-      - "traefik.http.routers.polisync-http.middlewares=redirect-to-https-polisync"
-      - "traefik.http.routers.polisync.middlewares=strip-prefix-polisync,cors-polisync"
-      - "traefik.http.services.polisync.loadbalancer.server.port=8080"
+      - web1
     restart: unless-stopped
 
 networks:
-  web0:
-    name: web0
+  web1:
+    name: web1

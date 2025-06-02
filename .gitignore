@@ -2,7 +2,8 @@
 pb_*/
 
 # Docker files
-Dockerfile.old
+Dockerfile.old 
+docker-compose.yml-old
 
 # Docker volumes
 # *.volume
