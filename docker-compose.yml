@@ -19,7 +19,7 @@ services:
         - PB_VERSION=0.28.2
     container_name: pb_backend
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - ./pb_data:/pb/pb_data
     networks:
