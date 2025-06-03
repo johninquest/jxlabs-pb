@@ -1,15 +1,4 @@
 services:
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    networks:
-      - web1
-    restart: unless-stopped
-    depends_on:
-      - pb_backend
 
   pb_backend:
     build:
@@ -24,7 +13,17 @@ services:
       - ./pb_data:/pb/pb_data
     networks:
       - web1
-    restart: unless-stopped
+    restart: unless-stopped 
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    command: ngrok http pb_backend:8080
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    networks:
+      - web1
+    restart: unless-stopped   
 
 networks:
   web1:
