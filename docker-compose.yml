@@ -13,15 +13,15 @@ services:
       - ./pb_data:/pb/pb_data
     networks:
       - web1
-    restart: unless-stopped 
+    restart: unless-stopped
 
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
-    command: tunnel --no-autoupdate run --url http://pb_backend:8080
+    command: tunnel --no-autoupdate --url http://pb_backend:8080
     networks:
       - web1
-    restart: unless-stopped   
+    restart: unless-stopped
 
 networks:
   web1:
