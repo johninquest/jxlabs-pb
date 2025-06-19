@@ -1,4 +1,27 @@
 services:
+  traefik:
+    image: "traefik:v2.11"
+    container_name: "traefik"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${DB_ADMIN_USER}" # Make sure this is a valid email for Let's Encrypt
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik Dashboard
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - web1
+    restart: unless-stopped
+
   pb_backend:
     build:
       context: .
@@ -6,31 +29,26 @@ services:
       args:
         - PB_VERSION=0.28.2
     container_name: pb_backend
-    ports:
-      - "8080:8080"
     volumes:
-      - ./pb_data:/pb/pb_data 
+      - ./pb_data:/pb/pb_data
       - ./pb_hooks.js:/pb/pb_hooks.js
     networks:
       - web1
     restart: unless-stopped
     environment:
-      # These variables will be available to PocketBase's Go application
-      # And, with the POCKETBASE_APP_ENV_ prefix, they'll be accessible in pb_hooks.js via pb.env
       POCKETBASE_APP_ENV_ADMIN_EMAIL: ${DB_ADMIN_USER}
       POCKETBASE_APP_ENV_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
-      # It's also highly recommended to set an encryption key for production
-      POCKETBASE_ENCRYPTION_KEY: ${POCKETBASE_ENCRYPTION_KEY} # Make sure to add this to your .env
-  # If you need to pass general environment variables to the PocketBase process (not necessarily to hooks), you can also do it like this:
-  # MY_CUSTOM_VAR: "some_value" 
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
-    networks:
-      - web1
-    restart: unless-stopped 
+      POCKETBASE_ENCRYPTION_KEY: ${POCKETBASE_ENCRYPTION_KEY}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pb_backend.rule=Host(`boro.johnapps.de`)"
+      - "traefik.http.routers.pb_backend.entrypoints=websecure"
+      - "traefik.http.routers.pb_backend.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.pb_backend-http.rule=Host(`boro.johnapps.de`)"
+      - "traefik.http.routers.pb_backend-http.entrypoints=web"
+      - "traefik.http.routers.pb_backend-http.middlewares=https-redirect"
+      - "traefik.http.services.pb_backend.loadbalancer.server.port=8080"
 
 networks:
   web1:
