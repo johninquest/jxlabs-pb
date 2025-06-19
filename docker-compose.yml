@@ -27,7 +27,7 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
-    command: tunnel --no-autoupdate run --url http://pb_backend:8080
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     networks:
       - web1
     restart: unless-stopped 
