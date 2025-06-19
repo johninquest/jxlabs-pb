@@ -1,6 +1,6 @@
 // pb_hooks.js
-const DEFAULT_ADMIN_EMAIL = process.env.DB_ADMIN_USER;
-const DEFAULT_ADMIN_PASSWORD = process.env.DB_ADMIN_PASSWORD;
+const DEFAULT_ADMIN_EMAIL = "johninquest@gmail.com";
+const DEFAULT_ADMIN_PASSWORD = "?borodb97";
 
 pb.on("beforeServe", async () => {
     const admins = await pb.admins.getFullList();

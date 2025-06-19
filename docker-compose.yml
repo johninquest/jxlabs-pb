@@ -10,8 +10,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./pb_data:/pb/pb_data 
-      - ./pb_hooks.js:/pb/pb_hooks.js
+      - ./pb_data:/pbd/pb_data
+      - ./pb_hooks.js:/pbd/pb_hooks.js
     networks:
       - web1
     restart: unless-stopped
