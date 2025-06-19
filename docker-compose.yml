@@ -1,5 +1,4 @@
 services:
-
   pb_backend:
     build:
       context: .
@@ -10,19 +9,28 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./pb_data:/pbd/pb_data
-      - ./pb_hooks.js:/pbd/pb_hooks.js
+      - ./pb_data:/pb/pb_data 
+      - ./pb_hooks.js:/pb/pb_hooks.js
     networks:
       - web1
     restart: unless-stopped
+    environment:
+      # These variables will be available to PocketBase's Go application
+      # And, with the POCKETBASE_APP_ENV_ prefix, they'll be accessible in pb_hooks.js via pb.env
+      POCKETBASE_APP_ENV_ADMIN_EMAIL: ${DB_ADMIN_USER}
+      POCKETBASE_APP_ENV_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      # It's also highly recommended to set an encryption key for production
+      POCKETBASE_ENCRYPTION_KEY: ${POCKETBASE_ENCRYPTION_KEY} # Make sure to add this to your .env
+  # If you need to pass general environment variables to the PocketBase process (not necessarily to hooks), you can also do it like this:
+  # MY_CUSTOM_VAR: "some_value" 
 
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
-    command: tunnel --no-autoupdate --url http://pb_backend:8080
+    command: tunnel --no-autoupdate run --url http://pb_backend:8080
     networks:
       - web1
-    restart: unless-stopped
+    restart: unless-stopped 
 
 networks:
   web1:
