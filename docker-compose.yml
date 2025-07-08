@@ -41,11 +41,11 @@ services:
       POCKETBASE_ENCRYPTION_KEY: ${POCKETBASE_ENCRYPTION_KEY}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pb_backend.rule=Host(`boro.johnapps.de`)"
+      - "traefik.http.routers.pb_backend.rule=Host(`pocketbase.johnapps.de`)"
       - "traefik.http.routers.pb_backend.entrypoints=websecure"
       - "traefik.http.routers.pb_backend.tls.certresolver=myresolver"
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.pb_backend-http.rule=Host(`boro.johnapps.de`)"
+      - "traefik.http.routers.pb_backend-http.rule=Host(`pocketbase.johnapps.de`)"
       - "traefik.http.routers.pb_backend-http.entrypoints=web"
       - "traefik.http.routers.pb_backend-http.middlewares=https-redirect"
       - "traefik.http.services.pb_backend.loadbalancer.server.port=8080"
