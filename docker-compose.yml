@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.base
       args:
-        - PB_VERSION=0.28.2
+        - PB_VERSION=${PB_VERSION}
     container_name: pb_backend
     volumes:
       - ./pb_data:/pb/pb_data
@@ -18,7 +18,7 @@ services:
       POCKETBASE_ENCRYPTION_KEY: ${POCKETBASE_ENCRYPTION_KEY}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pb_backend.rule=Host(`pocketbase.johnapps.de`)"
+      - "traefik.http.routers.pb_backend.rule=Host(`pocketbase.johnxlabs.de`)"
       - "traefik.http.routers.pb_backend.entrypoints=websecure"
       - "traefik.http.routers.pb_backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.pb_backend.loadbalancer.server.port=8080"
